@@ -1,0 +1,655 @@
+/* ============================================
+   GLOBAL STYLES & RESET
+   ============================================ */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body {
+  width: 100%;
+  height: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background-image: url("https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTb627V9x10513qQ8t6N-g8c-O_Xv7B3u5d7Q&s");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+/* ============================================
+   NAVBAR STYLES
+   ============================================ */
+
+.NavBar {
+  width: 100%;
+  height: 75px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 40px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  box-sizing: border-box;
+  backdrop-filter: blur(10px);
+}
+
+/* Logo Section */
+.logo-section {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.logo-img {
+  width: 45px;
+  height: 45px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  transition: all 0.3s ease;
+}
+
+.logo-img:hover {
+  border-color: white;
+  transform: scale(1.05);
+}
+
+.logo {
+  color: white;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.Title-Main {
+  color: white;
+  font-size: 20px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Navigation Links */
+.NavBar ul {
+  display: flex;
+  gap: 30px;
+  list-style: none;
+  align-items: center;
+}
+
+.NavBar ul li a {
+  text-decoration: none;
+  color: white;
+  font-size: 15px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.NavBar ul li a:hover {
+  color: #e0e7ff;
+}
+
+.NavBar ul li a::after {
+  content: "";
+  position: absolute;
+  bottom: -5px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: white;
+  transition: width 0.3s ease;
+}
+
+.NavBar ul li a:hover::after {
+  width: 100%;
+}
+
+/* Search Bar */
+.Search-Nav {
+  width: 220px;
+  padding: 10px 15px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 25px;
+  outline: none;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+  margin-left: 60%;
+}
+
+.Search-Nav::placeholder {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.Search-Nav:focus {
+  border-color: white;
+  background-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.1);
+}
+
+/* Navbar Button */
+.NavBar button {
+  padding: 10px 24px;
+  border: none;
+  border-radius: 25px;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.NavBar button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+}
+
+.NavBar button:active {
+  transform: translateY(0);
+}
+
+/* ============================================
+   AUTH CONTAINER (LOGIN/REGISTER)
+   ============================================ */
+
+.container {
+  padding: 40px 30px;
+  margin: 0 auto;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  border-radius: 20px;
+  backdrop-filter: blur(12px);
+  background-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 8px 32px rgba(31, 38, 135, 0.37);
+  width: 100%;
+  max-width: 400px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  animation: slideUp 0.5s ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.Register-Box,
+.login-Box {
+  border: none;
+  width: 100%;
+  margin: auto;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 15px;
+}
+
+.Register-Box h2,
+.login-Box h2 {
+  color: #1f2937;
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+
+/* ============================================
+   INPUT FIELDS
+   ============================================ */
+
+.input {
+  width: 100%;
+  padding: 12px 15px;
+  margin: 8px 0;
+  border: 2px solid #e5e7eb;
+  border-radius: 10px;
+  outline: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  background-color: rgba(255, 255, 255, 0.9);
+  color: #111827;
+}
+
+.input::placeholder {
+  color: #9ca3af;
+}
+
+.input:focus {
+  border-color: #3b82f6;
+  background-color: white;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+.input:valid {
+  border-color: #10b981;
+}
+
+/* ============================================
+   SUBMIT BUTTON
+   ============================================ */
+
+.submitbtn {
+  width: 100%;
+  padding: 12px 20px;
+  margin: 15px 0;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  color: white;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+  transition: all 0.3s ease;
+}
+
+.submitbtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+}
+
+.submitbtn:active {
+  transform: translateY(0);
+}
+
+.submitbtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ============================================
+   TOGGLE BUTTON / LINKS
+   ============================================ */
+
+.togglebtn {
+  margin-top: 15px;
+  font-size: 14px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+a {
+  text-decoration: none;
+  color: #3b82f6;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+a:hover {
+  color: #2563eb;
+}
+
+/* ============================================
+   IMAGE STYLES
+   ============================================ */
+
+.img {
+  width: 150px;
+  height: 150px;
+  object-fit: cover;
+  border-radius: 10px;
+  padding: 5px;
+  border: 2px solid rgba(59, 130, 246, 0.2);
+  transition: all 0.3s ease;
+  margin: 20px 0;
+}
+
+.img:hover {
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.3);
+  transform: translateY(-5px) scale(1.05);
+  border: 2px solid #3b82f6;
+  cursor: pointer;
+}
+
+/* ============================================
+   RESPONSIVE DESIGN - TABLET (768px to 1024px)
+   ============================================ */
+
+@media (max-width: 1024px) {
+  .NavBar {
+    padding: 0 30px;
+  }
+
+  .NavBar ul {
+    gap: 20px;
+  }
+
+  .NavBar ul li a {
+    font-size: 14px;
+  }
+
+  .Search-Nav {
+    width: 180px;
+    margin-left: auto;
+    margin-right: 15px;
+  }
+
+  .container {
+    max-width: 380px;
+  }
+}
+
+/* ============================================
+   RESPONSIVE DESIGN - TABLET (480px to 768px)
+   ============================================ */
+
+@media (max-width: 768px) {
+  .NavBar {
+    padding: 0 20px;
+    height: 70px;
+    flex-wrap: wrap;
+  }
+
+  .logo-section {
+    gap: 8px;
+  }
+
+  .logo-img {
+    width: 40px;
+    height: 40px;
+  }
+
+  .Title-Main {
+    font-size: 18px;
+  }
+
+  .NavBar ul {
+    gap: 15px;
+    order: 3;
+    width: 100%;
+    margin-top: 70px;
+    padding: 10px 0;
+    display: none;
+  }
+
+  .Search-Nav {
+    width: 150px;
+    margin-left: auto;
+    margin-right: 0;
+    font-size: 13px;
+    padding: 8px 12px;
+  }
+
+  .NavBar button {
+    padding: 8px 16px;
+    font-size: 13px;
+  }
+
+  .container {
+    max-width: 90%;
+    margin: 100px 20px 20px;
+    padding: 30px 20px;
+  }
+
+  .input {
+    padding: 10px 12px;
+    font-size: 14px;
+  }
+
+  .submitbtn {
+    padding: 10px 16px;
+    font-size: 15px;
+  }
+
+  .img {
+    width: 120px;
+    height: 120px;
+  }
+}
+
+/* ============================================
+   RESPONSIVE DESIGN - MOBILE (360px to 480px)
+   ============================================ */
+
+@media (max-width: 480px) {
+  body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    padding-top: 75px;
+  }
+
+  .NavBar {
+    padding: 0 15px;
+    height: 70px;
+    width: 100vw;
+  }
+
+  .logo-section {
+    gap: 6px;
+  }
+
+  .logo-img {
+    width: 38px;
+    height: 38px;
+  }
+
+  .Title-Main {
+    font-size: 16px;
+  }
+
+  .NavBar ul {
+    display: none;
+  }
+
+  .Search-Nav {
+    width: 120px;
+    padding: 8px 10px;
+    font-size: 12px;
+    margin-left: auto;
+  }
+
+  .NavBar button {
+    padding: 8px 14px;
+    font-size: 12px;
+  }
+
+  .container {
+    width: 100%;
+    max-width: 100%;
+    margin: 20px;
+    padding: 25px 20px;
+    border-radius: 15px;
+  }
+
+  .Register-Box,
+  .login-Box {
+    gap: 12px;
+  }
+
+  .Register-Box h2,
+  .login-Box h2 {
+    font-size: 20px;
+    margin-bottom: 15px;
+  }
+
+  .input {
+    padding: 10px 12px;
+    font-size: 13px;
+    margin: 6px 0;
+  }
+
+  .submitbtn {
+    padding: 10px 14px;
+    font-size: 14px;
+    margin: 12px 0;
+  }
+
+  .togglebtn {
+    font-size: 13px;
+  }
+
+  .img {
+    width: 100px;
+    height: 100px;
+  }
+
+  a {
+    font-size: 13px;
+  }
+}
+
+/* ============================================
+   RESPONSIVE DESIGN - SMALL MOBILE (Below 360px)
+   ============================================ */
+
+@media (max-width: 320px) {
+  body {
+    padding-top: 70px;
+  }
+
+  .NavBar {
+    padding: 0 10px;
+  }
+
+  .logo-section {
+    gap: 4px;
+  }
+
+  .logo-img {
+    width: 35px;
+    height: 35px;
+  }
+
+  .Title-Main {
+    font-size: 14px;
+  }
+
+  .Search-Nav {
+    width: 100px;
+    font-size: 11px;
+  }
+
+  .NavBar button {
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+
+  .container {
+    margin: 15px 10px;
+    padding: 20px 15px;
+  }
+
+  .Register-Box h2,
+  .login-Box h2 {
+    font-size: 18px;
+  }
+
+  .input {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+
+  .submitbtn {
+    padding: 8px 10px;
+    font-size: 13px;
+  }
+
+  .img {
+    width: 80px;
+    height: 80px;
+  }
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+
+.error-message {
+  color: #dc2626;
+  font-size: 12px;
+  margin-top: 5px;
+  font-weight: 500;
+}
+
+.success-message {
+  color: #10b981;
+  font-size: 12px;
+  margin-top: 5px;
+  font-weight: 500;
+}
+
+.hidden {
+  display: none !important;
+}
+
+.visible {
+  display: block !important;
+}
+
+/* ============================================
+   SCROLLBAR STYLING
+   ============================================ */
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+::-webkit-scrollbar-thumb {
+  background: #3b82f6;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #2563eb;
+}
+.home-button-go {
+  width: 100%;
+  padding: 12px 20px;
+  margin: 15px 0;
+  margin-left: 5px;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 600;
+  color: white;
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+  transition: all 0.3s ease;
+}
+
+.home-button-go:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(34, 197, 94, 0.4);
+}
+
+.home-button-go:active {
+  transform: translateY(0);
+}
+
+.home-button-go:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
