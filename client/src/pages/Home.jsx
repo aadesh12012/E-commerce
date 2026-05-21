@@ -173,7 +173,7 @@ function Home() {
                   <p className="product-description">{product.info}</p>
 
                   <div className="price-container">
-                    <span className="price">${product.price}</span>
+                    <span className="price">₹{product.price}</span>
                   </div>
 
                   <button
