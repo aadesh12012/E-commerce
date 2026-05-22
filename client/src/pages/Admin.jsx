@@ -108,17 +108,24 @@ function Admin() {
             background: "linear-gradient(135deg, #0f0c29, #302b63, #24243e)",
             fontFamily: "'Inter','Segoe UI',sans-serif",
             color: "#fff",
+            paddingTop: "60px"
         },
         header: {
             background: "rgba(255,255,255,0.05)",
             backdropFilter: "blur(20px)",
-            borderBottom: "1px solid rgba(255,255,255,0.08)",
-            padding: "18px 40px",
+            border: "1px solid rgba(255,255,255,0.1)",
+            padding: "16px 40px",
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            zIndex: 1000,
+            boxShadow: "0 4px 15px rgba(0, 0, 0, 0.2)"
         },
-        logo: { fontSize: "1.5rem", fontWeight: "800", color: "#f59e0b", letterSpacing: "-0.5px" },
+        logo: { fontSize: "1.3rem", fontWeight: "700", color: "#a78bfa", letterSpacing: "0.5px" },
         logoutBtn: {
             background: "rgba(255,59,59,0.15)",
             color: "#ff6b6b",
@@ -127,32 +134,37 @@ function Admin() {
             borderRadius: "8px",
             cursor: "pointer",
             fontSize: "0.9rem",
+            fontWeight: "600",
+            transition: "all 0.3s ease"
         },
         container: { maxWidth: "1200px", margin: "0 auto", padding: "40px 20px" },
         statRow: { display: "flex", gap: "16px", flexWrap: "wrap", marginBottom: "30px" },
         statCard: (color) => ({
             flex: "1 1 180px",
-            background: `linear-gradient(135deg, ${color}28, ${color}10)`,
-            border: `1px solid ${color}44`,
-            borderRadius: "14px",
-            padding: "22px 24px",
+            background: "rgba(255,255,255,0.05)",
+            border: "1px solid rgba(255,255,255,0.1)",
+            borderRadius: "12px",
+            padding: "20px",
+            backdropFilter: "blur(10px)"
         }),
         tabs: { display: "flex", gap: "10px", marginBottom: "28px", flexWrap: "wrap" },
         tabBtn: (active) => ({
-            padding: "10px 22px",
+            padding: "10px 20px",
             borderRadius: "8px",
-            border: active ? "none" : "1px solid rgba(255,255,255,0.12)",
-            background: active ? "linear-gradient(135deg,#f59e0b,#ef4444)" : "rgba(255,255,255,0.05)",
-            color: active ? "#fff" : "rgba(255,255,255,0.55)",
+            border: active ? "none" : "1px solid rgba(255,255,255,0.2)",
+            background: active ? "linear-gradient(135deg, #6c63ff, #a78bfa)" : "rgba(255,255,255,0.05)",
+            color: active ? "#fff" : "rgba(255,255,255,0.7)",
             cursor: "pointer",
-            fontWeight: active ? "700" : "400",
-            fontSize: "0.9rem",
+            fontWeight: active ? "600" : "400",
+            fontSize: "0.95rem",
+            transition: "all 0.3s ease"
         }),
         card: {
-            background: "rgba(255,255,255,0.04)",
-            border: "1px solid rgba(255,255,255,0.08)",
+            background: "rgba(255,255,255,0.05)",
+            border: "1px solid rgba(255,255,255,0.1)",
             borderRadius: "16px",
             padding: "28px",
+            backdropFilter: "blur(10px)"
         },
         row: {
             background: "rgba(255,255,255,0.04)",
@@ -167,41 +179,46 @@ function Admin() {
             gap: "10px",
         },
         deleteBtn: {
-            background: "rgba(239,68,68,0.15)",
-            color: "#f87171",
-            border: "1px solid rgba(239,68,68,0.3)",
+            background: "rgba(255,59,59,0.15)",
+            color: "#ff6b6b",
+            border: "1px solid rgba(255,59,59,0.3)",
             padding: "7px 16px",
             borderRadius: "7px",
             cursor: "pointer",
             fontSize: "0.85rem",
+            fontWeight: "600",
+            transition: "all 0.3s ease"
         },
         badge: (color) => ({
-            background: `${color}22`,
-            color: color,
-            padding: "3px 10px",
+            background: `rgba(255,255,255,0.1)`,
+            color: "rgba(255,255,255,0.8)",
+            padding: "4px 12px",
             borderRadius: "20px",
             fontSize: "0.75rem",
             fontWeight: "600",
+            border: "1px solid rgba(255,255,255,0.2)"
         }),
         payoutInput: {
             background: "rgba(255,255,255,0.07)",
             border: "1px solid rgba(255,255,255,0.15)",
-            borderRadius: "7px",
-            padding: "7px 12px",
+            borderRadius: "8px",
+            padding: "8px 12px",
             color: "#fff",
-            width: "100px",
+            width: "120px",
             fontSize: "0.9rem",
             outline: "none",
+            transition: "all 0.3s ease"
         },
         payBtn: {
-            background: "linear-gradient(135deg,#10b981,#059669)",
+            background: "linear-gradient(135deg, #6c63ff, #a78bfa)",
             color: "#fff",
             border: "none",
-            padding: "7px 14px",
-            borderRadius: "7px",
+            padding: "8px 16px",
+            borderRadius: "8px",
             cursor: "pointer",
-            fontSize: "0.85rem",
+            fontSize: "0.9rem",
             fontWeight: "600",
+            transition: "all 0.3s ease"
         },
     };
 
@@ -211,9 +228,9 @@ function Admin() {
         <div style={s.wrapper}>
             {/* Header */}
             <div style={s.header}>
-                <span style={s.logo}>🛡 Admin Panel</span>
+                <span style={s.logo}>Admin Panel</span>
                 <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
-                    <span style={{ color: "rgba(255,255,255,0.45)", fontSize: "0.9rem" }}>{user.email}</span>
+                    <span style={{ color: "rgba(255,255,255,0.7)", fontSize: "0.9rem" }}>{user.email}</span>
                     <button style={s.logoutBtn} onClick={handleLogout}>Logout</button>
                 </div>
             </div>
@@ -223,21 +240,21 @@ function Admin() {
                 {/* Stats */}
                 <div style={s.statRow}>
                     {[
-                        { label: "Total Users", value: users.length, color: "#6c63ff", icon: "👥" },
-                        { label: "Sellers", value: sellers.length, color: "#f59e0b", icon: "🏪" },
-                        { label: "Products", value: products.length, color: "#10b981", icon: "📦" },
-                        { label: "Total Revenue", value: `₹${totalRevenue}`, color: "#ef4444", icon: "💰" },
-                        { label: "Orders", value: orders.length, color: "#a78bfa", icon: "🧾" },
+                        { label: "Total Users", value: users.length },
+                        { label: "Sellers", value: sellers.length },
+                        { label: "Products", value: products.length },
+                        { label: "Total Revenue", value: `₹${totalRevenue}` },
+                        { label: "Orders", value: orders.length },
                     ].map(stat => (
-                        <div key={stat.label} style={s.statCard(stat.color)}>
-                            <p style={{ color: "rgba(255,255,255,0.45)", fontSize: "0.8rem", margin: "0 0 6px" }}>{stat.icon} {stat.label}</p>
-                            <h2 style={{ color: stat.color, margin: 0, fontSize: "1.8rem", fontWeight: "800" }}>{stat.value}</h2>
+                        <div key={stat.label} style={s.statCard()}>
+                            <p style={{ color: "rgba(255,255,255,0.6)", fontSize: "0.8rem", margin: "0 0 8px" }}>{stat.label}</p>
+                            <h2 style={{ color: "#a78bfa", margin: 0, fontSize: "1.8rem", fontWeight: "700" }}>{stat.value}</h2>
                         </div>
                     ))}
                 </div>
 
                 {payoutMsg && (
-                    <div style={{ background: "rgba(16,185,129,0.15)", border: "1px solid rgba(16,185,129,0.3)", borderRadius: "8px", padding: "12px 20px", marginBottom: "20px", color: "#6ee7b7" }}>
+                    <div style={{ background: "rgba(108, 99, 255, 0.15)", border: "1px solid rgba(108, 99, 255, 0.3)", borderRadius: "8px", padding: "12px 20px", marginBottom: "20px", color: "#a78bfa", fontWeight: "600" }}>
                         {payoutMsg}
                     </div>
                 )}
@@ -246,18 +263,17 @@ function Admin() {
                 <div style={s.tabs}>
                     {["users","products","sellers","orders"].map(tab => (
                         <button key={tab} style={s.tabBtn(activeTab === tab)} onClick={() => setActiveTab(tab)}>
-                            {tab === "users" && "👥 Users"}
-                            {tab === "products" && "📦 Products"}
-                            {tab === "sellers" && "🏪 Sellers & Payouts"}
-                            {tab === "orders" && "🧾 All Orders"}
+                            {tab === "users" && "Users"}
+                            {tab === "products" && "Products"}
+                            {tab === "sellers" && "Sellers & Payouts"}
+                            {tab === "orders" && "All Orders"}
                         </button>
                     ))}
                 </div>
 
                 {loading ? (
-                    <div style={{ textAlign: "center", padding: "60px", color: "rgba(255,255,255,0.4)" }}>
-                        <div style={{ fontSize: "2rem", marginBottom: "10px" }}>⏳</div>
-                        <p>Loading...</p>
+                    <div style={{ textAlign: "center", padding: "60px", color: "rgba(255,255,255,0.6)" }}>
+                        <p style={{ fontSize: "1rem", fontWeight: "500" }}>Loading...</p>
                     </div>
                 ) : (
                     <div style={s.card}>
@@ -265,8 +281,8 @@ function Admin() {
                         {/* ─── USERS ─── */}
                         {activeTab === "users" && (
                             <>
-                                <h2 style={{ marginBottom: "22px" }}>All Users <span style={{ color: "rgba(255,255,255,0.35)", fontSize: "1rem", fontWeight: "400" }}>({users.length})</span></h2>
-                                {users.length === 0 ? <p style={{ color: "rgba(255,255,255,0.4)" }}>No users found.</p> : users.map(u => (
+                                <h2 style={{ marginBottom: "22px", fontWeight: "600" }}>All Users <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "1rem", fontWeight: "400" }}>({users.length})</span></h2>
+                                {users.length === 0 ? <p style={{ color: "rgba(255,255,255,0.6)" }}>No users found.</p> : users.map(u => (
                                     <div key={u._id} style={s.row}>
                                         <div>
                                             <p style={{ fontWeight: "600", margin: 0 }}>{u.name}</p>
@@ -286,8 +302,8 @@ function Admin() {
                         {/* ─── PRODUCTS ─── */}
                         {activeTab === "products" && (
                             <>
-                                <h2 style={{ marginBottom: "22px" }}>All Products <span style={{ color: "rgba(255,255,255,0.35)", fontSize: "1rem", fontWeight: "400" }}>({products.length})</span></h2>
-                                {products.length === 0 ? <p style={{ color: "rgba(255,255,255,0.4)" }}>No products found.</p> : products.map(p => (
+                                <h2 style={{ marginBottom: "22px", fontWeight: "600" }}>All Products <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "1rem", fontWeight: "400" }}>({products.length})</span></h2>
+                                {products.length === 0 ? <p style={{ color: "rgba(255,255,255,0.6)" }}>No products found.</p> : products.map(p => (
                                     <div key={p._id} style={s.row}>
                                         <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
                                             <img src={p.image} alt={p.name} style={{ width: "52px", height: "52px", borderRadius: "8px", objectFit: "cover", background: "#333" }} onError={e => { e.target.style.display = "none"; }} />
@@ -305,8 +321,8 @@ function Admin() {
                         {/* ─── SELLERS & PAYOUTS ─── */}
                         {activeTab === "sellers" && (
                             <>
-                                <h2 style={{ marginBottom: "22px" }}>Sellers & Payout Management</h2>
-                                {sellers.length === 0 ? <p style={{ color: "rgba(255,255,255,0.4)" }}>No sellers found.</p> : sellers.map(sel => (
+                                <h2 style={{ marginBottom: "22px", fontWeight: "600" }}>Sellers & Payout Management</h2>
+                                {sellers.length === 0 ? <p style={{ color: "rgba(255,255,255,0.6)" }}>No sellers found.</p> : sellers.map(sel => (
                                     <div key={sel._id} style={{ ...s.row, flexDirection: "column", alignItems: "flex-start" }}>
                                         <div style={{ display: "flex", justifyContent: "space-between", width: "100%", flexWrap: "wrap", gap: "10px" }}>
                                             <div>
@@ -338,9 +354,9 @@ function Admin() {
 
                                         {/* Earnings */}
                                         <div style={{ display: "flex", gap: "20px", marginTop: "12px", flexWrap: "wrap" }}>
-                                            <div style={{ background: "rgba(16,185,129,0.1)", border: "1px solid rgba(16,185,129,0.25)", borderRadius: "8px", padding: "8px 16px" }}>
-                                                <span style={{ color: "rgba(255,255,255,0.45)", fontSize: "0.78rem" }}>Transferred</span>
-                                                <p style={{ color: "#10b981", fontWeight: "700", margin: "2px 0 0" }}>₹{sel.earningsTransferred || 0}</p>
+                                            <div style={{ background: "rgba(167, 139, 250, 0.1)", border: "1px solid rgba(167, 139, 250, 0.3)", borderRadius: "8px", padding: "8px 16px" }}>
+                                                <span style={{ color: "rgba(255,255,255,0.6)", fontSize: "0.78rem", fontWeight: "500" }}>Transferred</span>
+                                                <p style={{ color: "#a78bfa", fontWeight: "700", margin: "2px 0 0" }}>₹{sel.earningsTransferred || 0}</p>
                                             </div>
                                         </div>
 
@@ -366,8 +382,8 @@ function Admin() {
                         {/* ─── ALL ORDERS ─── */}
                         {activeTab === "orders" && (
                             <>
-                                <h2 style={{ marginBottom: "22px" }}>All Orders <span style={{ color: "rgba(255,255,255,0.35)", fontSize: "1rem", fontWeight: "400" }}>({orders.length})</span></h2>
-                                {orders.length === 0 ? <p style={{ color: "rgba(255,255,255,0.4)" }}>No orders yet.</p> : orders.map(order => (
+                                <h2 style={{ marginBottom: "22px", fontWeight: "600" }}>All Orders <span style={{ color: "rgba(255,255,255,0.5)", fontSize: "1rem", fontWeight: "400" }}>({orders.length})</span></h2>
+                                {orders.length === 0 ? <p style={{ color: "rgba(255,255,255,0.6)" }}>No orders yet.</p> : orders.map(order => (
                                     <div key={order._id} style={s.row}>
                                         <div>
                                             <p style={{ fontWeight: "600", margin: 0 }}>{order.productId?.name || "Product"}</p>
@@ -379,11 +395,11 @@ function Admin() {
                                             </p>
                                         </div>
                                         <div style={{ textAlign: "right" }}>
-                                            <p style={{ color: "#10b981", fontWeight: "800", fontSize: "1.1rem", margin: 0 }}>₹{order.amount}</p>
-                                            <span style={s.badge(order.paymentStatus === "successful" ? "#10b981" : "#f59e0b")}>
+                                            <p style={{ color: "#a78bfa", fontWeight: "800", fontSize: "1.1rem", margin: 0 }}>₹{order.amount}</p>
+                                            <span style={s.badge(order.paymentStatus === "successful" ? "#a78bfa" : "#ffa726")}>
                                                 {order.paymentStatus}
                                             </span>
-                                            <p style={{ color: "rgba(255,255,255,0.3)", fontSize: "0.78rem", margin: "4px 0 0" }}>
+                                            <p style={{ color: "rgba(255,255,255,0.5)", fontSize: "0.78rem", margin: "4px 0 0" }}>
                                                 {new Date(order.createdAt).toLocaleDateString("en-IN")}
                                             </p>
                                         </div>
