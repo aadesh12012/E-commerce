@@ -1,0 +1,161 @@
+const OtpModel = require("../models/Otp");
+const bcrypt = require("bcrypt");
+const otpGenerator = require("otp-generator");
+const { sendOtpEmail } = require("../services/emailService");
+const { isEmailConfigured } = require("../config/mailer");
+
+const OTP_EXPIRY_MINUTES = 10;
+const OTP_RESEND_COOLDOWN_MS = 60 * 1000;
+
+const PURPOSE = {
+    USER_REGISTER: "user-register",
+    SELLER_REGISTER: "seller-register",
+};
+
+function normalizeEmail(email) {
+    return String(email).trim().toLowerCase();
+}
+
+function isValidEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+async function sendRegistrationOtp(email, purpose, existsCheck) {
+    if (!email) {
+        return { status: 400, body: { success: false, message: "Email is required" } };
+    }
+
+    const normalizedEmail = normalizeEmail(email);
+
+    if (!isValidEmail(normalizedEmail)) {
+        return {
+            status: 400,
+            body: { success: false, message: "Invalid email address" },
+        };
+    }
+
+    if (!isEmailConfigured()) {
+        return {
+            status: 503,
+            body: {
+                success: false,
+                message: "Email service is not configured. Cannot send OTP.",
+            },
+        };
+    }
+
+    const exists = await existsCheck(normalizedEmail);
+    if (exists) {
+        return { status: 200, body: { success: false, message: exists.message } };
+    }
+
+    const existingOtp = await OtpModel.findOne({
+        email: normalizedEmail,
+        purpose,
+    });
+
+    if (
+        existingOtp &&
+        Date.now() - new Date(existingOtp.updatedAt).getTime() <
+            OTP_RESEND_COOLDOWN_MS
+    ) {
+        return {
+            status: 429,
+            body: {
+                success: false,
+                message: "Please wait 60 seconds before requesting a new OTP",
+            },
+        };
+    }
+
+    const otp = otpGenerator.generate(6, {
+        digits: true,
+        lowerCaseAlphabets: false,
+        upperCaseAlphabets: false,
+        specialChars: false,
+    });
+
+    const otpHash = await bcrypt.hash(otp, 10);
+    const expiresAt = new Date(Date.now() + OTP_EXPIRY_MINUTES * 60 * 1000);
+
+    await OtpModel.findOneAndUpdate(
+        { email: normalizedEmail, purpose },
+        { otpHash, expiresAt, purpose },
+        { upsert: true, new: true }
+    );
+
+    const mailResult = await sendOtpEmail(normalizedEmail, otp);
+
+    if (!mailResult.success) {
+        return {
+            status: 500,
+            body: {
+                success: false,
+                message: mailResult.error || "Failed to send OTP email",
+            },
+        };
+    }
+
+    return {
+        status: 200,
+        body: {
+            success: true,
+            message: "OTP sent to your email. It expires in 10 minutes.",
+        },
+    };
+}
+
+async function verifyRegistrationOtp(email, otp, purpose) {
+    const normalizedEmail = normalizeEmail(email);
+
+    if (!otp) {
+        return { valid: false, message: "OTP is required", email: normalizedEmail };
+    }
+
+    const otpRecord = await OtpModel.findOne({
+        email: normalizedEmail,
+        purpose,
+    });
+
+    if (!otpRecord) {
+        return {
+            valid: false,
+            message: "OTP not found. Please request a new OTP.",
+            email: normalizedEmail,
+        };
+    }
+
+    if (otpRecord.expiresAt < new Date()) {
+        await OtpModel.deleteOne({ email: normalizedEmail, purpose });
+        return {
+            valid: false,
+            message: "OTP has expired. Please request a new OTP.",
+            email: normalizedEmail,
+        };
+    }
+
+    const isOtpValid = await bcrypt.compare(String(otp).trim(), otpRecord.otpHash);
+
+    if (!isOtpValid) {
+        return {
+            valid: false,
+            message: "Invalid OTP. Please check and try again.",
+            email: normalizedEmail,
+        };
+    }
+
+    return { valid: true, email: normalizedEmail };
+}
+
+async function clearRegistrationOtp(email, purpose) {
+    await OtpModel.deleteOne({ email: normalizeEmail(email), purpose });
+}
+
+module.exports = {
+    PURPOSE,
+    normalizeEmail,
+    isValidEmail,
+    sendRegistrationOtp,
+    verifyRegistrationOtp,
+    clearRegistrationOtp,
+};

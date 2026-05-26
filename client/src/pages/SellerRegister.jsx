@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../api/axios";
 import AuthLayout, { AuthFooterLink, AuthLink } from "../components/ui/AuthLayout";
 import Card from "../components/ui/Card";
 import Input from "../components/ui/Input";
@@ -18,18 +18,56 @@ function SellerRegister() {
     businessName: "",
     address: "",
   });
+  const [otp, setOtp] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
+  const [sendingOtp, setSendingOtp] = useState(false);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    if (name === "email") {
+      setOtpSent(false);
+      setOtp("");
+    }
+  };
+
+  const handleSendOtp = async () => {
+    setError("");
+    setSuccess("");
+
+    if (!formData.email) {
+      setError("Enter your email address first");
+      return;
+    }
+
+    setSendingOtp(true);
+    try {
+      const res = await api.post("/seller/register/send-otp", {
+        email: formData.email,
+      });
+      if (res.data.success) {
+        setOtpSent(true);
+        setSuccess(res.data.message || "OTP sent to your email");
+      } else {
+        setError(res.data.message || "Failed to send OTP");
+      }
+    } catch (err) {
+      setError(
+        err.response?.data?.message ||
+          "Failed to send OTP. Please try again."
+      );
+    } finally {
+      setSendingOtp(false);
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    setLoading(true);
+    setSuccess("");
 
     if (
       !formData.name ||
@@ -41,51 +79,55 @@ function SellerRegister() {
       !formData.address
     ) {
       setError("All fields are required");
-      setLoading(false);
+      return;
+    }
+
+    if (!otpSent) {
+      setError("Please verify your email with OTP first");
+      return;
+    }
+
+    if (!otp || otp.length !== 6) {
+      setError("Enter the 6-digit OTP from your email");
       return;
     }
 
     if (formData.password !== formData.confirmPassword) {
       setError("Passwords do not match");
-      setLoading(false);
       return;
     }
 
     if (formData.password.length < 6) {
       setError("Password must be at least 6 characters");
-      setLoading(false);
       return;
     }
 
+    setLoading(true);
     try {
-      const res = await axios.post(
-        "http://localhost:3000/seller/register",
-        {
-          name: formData.name,
-          email: formData.email,
-          password: formData.password,
-          phone: formData.phone,
-          businessName: formData.businessName,
-          address: formData.address,
-        },
-        { withCredentials: true }
-      );
+      const res = await api.post("/seller/register", {
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        phone: formData.phone,
+        businessName: formData.businessName,
+        address: formData.address,
+        otp,
+      });
 
       if (res.data.success) {
-        alert(
-          "Seller Registration Successful! Please login with your credentials."
+        setSuccess(
+          res.data.message ||
+            "Seller account created! Redirecting to login..."
         );
-        navigate("/sellerlogin");
+        setTimeout(() => navigate("/sellerlogin"), 2000);
       } else {
         setError(res.data.message || "Registration failed");
       }
     } catch (err) {
-      console.log(err);
-      if (err.response?.data?.message) {
-        setError(err.response.data.message);
-      } else {
-        setError("Something went wrong. Please try again.");
-      }
+      setError(
+        err.response?.data?.message ||
+          "Something went wrong. Please try again."
+      );
     } finally {
       setLoading(false);
     }
@@ -94,11 +136,12 @@ function SellerRegister() {
   return (
     <AuthLayout
       title="Seller registration"
-      subtitle="Set up your store on Black Lake."
+      subtitle="Verify your email with OTP to set up your store."
     >
       <Card padding="p-6 sm:p-8">
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && <Alert variant="error">{error}</Alert>}
+          {success && <Alert variant="success">{success}</Alert>}
 
           <Input
             name="name"
@@ -108,14 +151,45 @@ function SellerRegister() {
             onChange={handleChange}
             required
           />
+
+          <div className="space-y-2">
+            <Input
+              name="email"
+              type="email"
+              placeholder="Email"
+              value={formData.email}
+              onChange={handleChange}
+              required
+            />
+            <Button
+              type="button"
+              variant="secondary"
+              className="w-full"
+              disabled={sendingOtp || !formData.email}
+              onClick={handleSendOtp}
+            >
+              {sendingOtp
+                ? "Sending OTP..."
+                : otpSent
+                  ? "Resend OTP"
+                  : "Send OTP to email"}
+            </Button>
+          </div>
+
           <Input
-            name="email"
-            type="email"
-            placeholder="Email"
-            value={formData.email}
-            onChange={handleChange}
+            type="text"
+            placeholder="6-digit OTP"
+            value={otp}
+            onChange={(e) =>
+              setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))
+            }
             required
+            disabled={!otpSent}
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            maxLength={6}
           />
+
           <Input
             name="phone"
             type="tel"
@@ -157,8 +231,13 @@ function SellerRegister() {
             required
           />
 
-          <Button type="submit" size="lg" className="w-full" disabled={loading}>
-            {loading ? "Registering..." : "Register as seller"}
+          <Button
+            type="submit"
+            size="lg"
+            className="w-full"
+            disabled={loading || !otpSent}
+          >
+            {loading ? "Registering..." : "Verify & register as seller"}
           </Button>
         </form>
 

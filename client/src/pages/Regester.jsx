@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../api/axios";
 import AuthLayout, { AuthFooterLink, AuthLink } from "../components/ui/AuthLayout";
 import Card from "../components/ui/Card";
 import Input from "../components/ui/Input";
@@ -12,43 +12,92 @@ function Regester() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [otp, setOtp] = useState("");
+  const [otpSent, setOtpSent] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
+  const [sendingOtp, setSendingOtp] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSendOtp = async () => {
+    setError("");
+    setSuccess("");
+
+    if (!email) {
+      setError("Enter your email address first");
+      return;
+    }
+
+    setSendingOtp(true);
+    try {
+      const res = await api.post("/register/send-otp", { email });
+      if (res.data.success) {
+        setOtpSent(true);
+        setSuccess(res.data.message || "OTP sent to your email");
+      } else {
+        setError(res.data.message || "Failed to send OTP");
+      }
+    } catch (err) {
+      setError(
+        err.response?.data?.message ||
+          "Failed to send OTP. Please try again."
+      );
+    } finally {
+      setSendingOtp(false);
+    }
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-    setLoading(true);
+    setSuccess("");
 
-    axios
-      .post(
-        "http://localhost:3000/create",
-        { name, email, password },
-        { withCredentials: true }
-      )
-      .then((res) => {
-        if (res.data.success) {
-          navigate("/");
-        } else {
-          setError(res.data.message);
-        }
-      })
-      .catch((err) => {
-        console.log(err);
-        if (err.response?.data?.message) {
-          setError(err.response.data.message);
-        } else {
-          setError("Something went wrong. Please try again.");
-        }
-      })
-      .finally(() => setLoading(false));
+    if (!otpSent) {
+      setError("Please verify your email with OTP first");
+      return;
+    }
+
+    if (!otp || otp.length !== 6) {
+      setError("Enter the 6-digit OTP from your email");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await api.post("/create", {
+        name,
+        email,
+        password,
+        otp,
+      });
+      if (res.data.success) {
+        setSuccess(
+          res.data.message ||
+            "Account created! Check your inbox for a welcome email."
+        );
+        setTimeout(() => navigate("/"), 2000);
+      } else {
+        setError(res.data.message);
+      }
+    } catch (err) {
+      setError(
+        err.response?.data?.message ||
+          "Something went wrong. Please try again."
+      );
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <AuthLayout title="Create account" subtitle="Join Black Lake to start shopping.">
+    <AuthLayout
+      title="Create account"
+      subtitle="Verify your email with OTP to join Black Lake."
+    >
       <Card padding="p-6 sm:p-8">
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && <Alert variant="error">{error}</Alert>}
+          {success && <Alert variant="success">{success}</Alert>}
 
           <Input
             type="text"
@@ -58,14 +107,49 @@ function Regester() {
             required
             autoComplete="name"
           />
+
+          <div className="space-y-2">
+            <Input
+              type="email"
+              placeholder="Email address"
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                setOtpSent(false);
+                setOtp("");
+              }}
+              required
+              autoComplete="email"
+            />
+            <Button
+              type="button"
+              variant="secondary"
+              className="w-full"
+              disabled={sendingOtp || !email}
+              onClick={handleSendOtp}
+            >
+              {sendingOtp
+                ? "Sending OTP..."
+                : otpSent
+                  ? "Resend OTP"
+                  : "Send OTP to email"}
+            </Button>
+          </div>
+
           <Input
-            type="email"
-            placeholder="Email address"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
+            type="text"
+            placeholder="6-digit OTP"
+            value={otp}
+            onChange={(e) =>
+              setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))
+            }
             required
-            autoComplete="email"
+            disabled={!otpSent}
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            maxLength={6}
           />
+
           <Input
             type="password"
             placeholder="Password"
@@ -75,8 +159,13 @@ function Regester() {
             autoComplete="new-password"
           />
 
-          <Button type="submit" size="lg" className="w-full" disabled={loading}>
-            {loading ? "Creating account..." : "Create account"}
+          <Button
+            type="submit"
+            size="lg"
+            className="w-full"
+            disabled={loading || !otpSent}
+          >
+            {loading ? "Creating account..." : "Verify & create account"}
           </Button>
         </form>
 

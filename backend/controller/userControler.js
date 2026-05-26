@@ -1,55 +1,118 @@
 const UserModel = require("../models/User");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const { sendWelcomeEmail } = require("../services/emailService");
+const {
+    PURPOSE,
+    isValidEmail,
+    normalizeEmail,
+    sendRegistrationOtp,
+    verifyRegistrationOtp,
+    clearRegistrationOtp,
+} = require("../utils/otpHelper");
+
+const sendRegisterOtp = async (req, res) => {
+    try {
+        const { email } = req.body;
+        const result = await sendRegistrationOtp(
+            email,
+            PURPOSE.USER_REGISTER,
+            async (normalizedEmail) => {
+                const existing = await UserModel.findOne({ email: normalizedEmail });
+                if (existing) {
+                    return {
+                        message: "User already exists with this email",
+                    };
+                }
+                return null;
+            }
+        );
+        return res.status(result.status).json(result.body);
+    } catch (err) {
+        console.log(err);
+        res.status(500).json({ success: false, message: err.message });
+    }
+};
 
 const createUser = async (req, res) => {
     try {
-        let { name, email, password, role } = req.body;
+        let { name, email, password, otp, role } = req.body;
 
-        // check user
-        let existingUser = await UserModel.findOne({ email });
+        if (!name || !email || !password || !otp) {
+            return res.status(400).json({
+                success: false,
+                message: "Name, email, password, and OTP are required",
+            });
+        }
+
+        if (!isValidEmail(email)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid email address",
+            });
+        }
+
+        const otpCheck = await verifyRegistrationOtp(
+            email,
+            otp,
+            PURPOSE.USER_REGISTER
+        );
+
+        if (!otpCheck.valid) {
+            return res.status(400).json({
+                success: false,
+                message: otpCheck.message,
+            });
+        }
+
+        const normalizedEmail = otpCheck.email;
+
+        let existingUser = await UserModel.findOne({ email: normalizedEmail });
 
         if (existingUser) {
             return res.json({
                 success: false,
-                message: "User Already Exists"
+                message: "User Already Exists",
             });
         }
 
-        // hash password
         let hashpassword = await bcrypt.hash(password, 10);
 
-        // create user
         let user = await UserModel.create({
             name,
-            email,
+            email: normalizedEmail,
             password: hashpassword,
-            role: role || "user" // default role
+            role: role || "user",
         });
 
-        // jwt token
+        await clearRegistrationOtp(normalizedEmail, PURPOSE.USER_REGISTER);
+
         let token = jwt.sign(
             {
-                email,
+                email: normalizedEmail,
                 userid: user._id,
-                role: user.role
+                role: user.role,
             },
             process.env.JWT_SECRET || "nahibatauga"
         );
 
         res.cookie("token", token);
 
+        sendWelcomeEmail(normalizedEmail, name).catch((err) =>
+            console.warn("Welcome email failed:", err.message)
+        );
+
         res.json({
             success: true,
-            message: "User created successfully",
-            user
+            message:
+                "Account verified and created successfully. Check your email for a welcome message.",
+            user,
         });
-
     } catch (err) {
         console.log(err);
         res.status(500).json({
             success: false,
-            message: err.message
+            message: err.message,
         });
     }
 };
@@ -58,12 +121,12 @@ const loginUser = async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        const user = await UserModel.findOne({ email });
+        const user = await UserModel.findOne({ email: normalizeEmail(email) });
 
         if (!user) {
             return res.json({
                 success: false,
-                message: "User not found"
+                message: "User not found",
             });
         }
 
@@ -72,15 +135,15 @@ const loginUser = async (req, res) => {
         if (!isMatch) {
             return res.json({
                 success: false,
-                message: "Invalid credentials"
+                message: "Invalid credentials",
             });
         }
 
         let token = jwt.sign(
             {
-                email,
+                email: user.email,
                 userid: user._id,
-                role: user.role
+                role: user.role,
             },
             process.env.JWT_SECRET || "nahibatauga"
         );
@@ -90,19 +153,19 @@ const loginUser = async (req, res) => {
         return res.json({
             success: true,
             message: "Login successful",
-            user
+            user,
         });
-
     } catch (err) {
         console.log(err);
         return res.status(500).json({
             success: false,
-            message: err.message
+            message: err.message,
         });
     }
 };
 
 module.exports = {
+    sendRegisterOtp,
     createUser,
-    loginUser
+    loginUser,
 };

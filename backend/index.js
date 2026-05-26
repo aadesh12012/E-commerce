@@ -5,6 +5,7 @@ const cors = require("cors");
 const cookieParser = require("cookie-parser");
 const jwt = require("jsonwebtoken");
 require("./config/mongoose");
+const { verifyEmailConnection } = require("./config/mailer");
 
 app.use(cookieParser());
 app.use(express.json());
@@ -28,4 +29,5 @@ app.use("/", cartRouter);
 
 app.listen(3000, () => {
     console.log("Server started on port 3000");
+    verifyEmailConnection();
 });

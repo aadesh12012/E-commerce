@@ -60,39 +60,6 @@ if (existingProduct) {
     }
 
 };
-const listcart = async (req, res) => {
-
-    try {
-
-        const { userId } = req.params;
-
-        const user = await userModel
-            .findById(userId)
-            .populate("cart.productId");
-
-        if (!user) {
-
-            return res.status(404).json({
-                message: "User not found"
-            });
-
-        }
-
-        res.json(user.cart);
-
-    } catch (error) {
-
-        console.log(error);
-
-        res.status(500).json({
-            message: "Error listing cart"
-        });
-
-    }
-
-};
-
-
 const removeitem = async (req, res) => {
 
     try {
@@ -183,4 +150,4 @@ const carttotal = async (req, res) => {
 
 
 
-module.exports = {addtocart,listcart,removeitem,carttotal};
+module.exports = {addtocart,removeitem,carttotal};

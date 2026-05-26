@@ -4,20 +4,26 @@ const { isSeller } = require("../middlewares/authMiddleware");
 const {
     addproduct,
     listproduct,
+    sendSellerRegisterOtp,
     sellerregister,
     sellerlogin,
     savePayoutDetails,
     getEarnings,
-    getSellerOrders
+    getSellerOrders,
+    getSellerProducts,
+    deleteSellerProduct
 } = require("../controller/sellerController");
 
 router.post("/addproduct", isSeller, addproduct);
 router.get("/products", listproduct);
+router.post("/seller/register/send-otp", sendSellerRegisterOtp);
 router.post("/seller/register", sellerregister);
 router.post("/sellerlogin", sellerlogin);
 
 router.post("/seller/payout-details", isSeller, savePayoutDetails);
 router.get("/seller/earnings", isSeller, getEarnings);
 router.get("/seller/orders", isSeller, getSellerOrders);
+router.get("/seller/products", isSeller, getSellerProducts);
+router.delete("/seller/product/:id", isSeller, deleteSellerProduct);
 
 module.exports = router;

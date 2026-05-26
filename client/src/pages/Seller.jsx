@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-import axios from "axios";
 import { useNavigate } from "react-router-dom";
+import { Trash2 } from "lucide-react";
+import api from "../api/axios";
 import DashboardLayout, {
   StatCard,
   TabGroup,
@@ -13,9 +14,12 @@ import Button from "../components/ui/Button";
 import Badge from "../components/ui/Badge";
 import Spinner from "../components/ui/Spinner";
 import Alert from "../components/ui/Alert";
+import ConfirmModal from "../components/ui/ConfirmModal";
+import { useToast } from "../components/ui/Toast";
 
 const TABS = [
   { id: "add", label: "Add Product" },
+  { id: "products", label: "My Products" },
   { id: "orders", label: "My Orders" },
   { id: "earnings", label: "Earnings" },
   { id: "payout", label: "Payout Details" },
@@ -23,6 +27,7 @@ const TABS = [
 
 function Seller() {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [activeTab, setActiveTab] = useState("add");
 
   const [name, setName] = useState("");
@@ -38,6 +43,11 @@ function Seller() {
     transferredEarnings: 0,
     pendingEarnings: 0,
   });
+  const [products, setProducts] = useState([]);
+  const [loadingProducts, setLoadingProducts] = useState(false);
+  const [deletingId, setDeletingId] = useState(null);
+  const [confirmDelete, setConfirmDelete] = useState(null);
+
   const [loadingOrders, setLoadingOrders] = useState(false);
   const [loadingEarnings, setLoadingEarnings] = useState(false);
 
@@ -51,6 +61,7 @@ function Seller() {
   const seller = JSON.parse(localStorage.getItem("seller") || "{}");
 
   useEffect(() => {
+    if (activeTab === "products") fetchProducts();
     if (activeTab === "orders") fetchOrders();
     if (activeTab === "earnings") {
       fetchOrders();
@@ -59,12 +70,27 @@ function Seller() {
     if (activeTab === "payout") loadPayoutDetails();
   }, [activeTab]);
 
+  const fetchProducts = async () => {
+    setLoadingProducts(true);
+    try {
+      const res = await api.get("/seller/products");
+      if (res.data.success) {
+        setProducts(res.data.products || []);
+      }
+    } catch (err) {
+      toast(
+        err.response?.data?.message || "Failed to load your products",
+        "error"
+      );
+    } finally {
+      setLoadingProducts(false);
+    }
+  };
+
   const fetchOrders = async () => {
     setLoadingOrders(true);
     try {
-      const res = await axios.get("http://localhost:3000/seller/orders", {
-        withCredentials: true,
-      });
+      const res = await api.get("/seller/orders");
       setOrders(res.data.orders || []);
     } catch (err) {
       console.log(err);
@@ -76,9 +102,7 @@ function Seller() {
   const fetchEarnings = async () => {
     setLoadingEarnings(true);
     try {
-      const res = await axios.get("http://localhost:3000/seller/earnings", {
-        withCredentials: true,
-      });
+      const res = await api.get("/seller/earnings");
       setEarnings({
         totalEarnings: res.data.totalEarnings || 0,
         transferredEarnings: res.data.transferredEarnings || 0,
@@ -107,13 +131,10 @@ function Seller() {
       return;
     }
     try {
-      const res = await axios.post(
-        "http://localhost:3000/addproduct",
-        { name, price, image, info },
-        { withCredentials: true }
-      );
+      const res = await api.post("/addproduct", { name, price, image, info });
       if (res.data.success) {
         setSuccess("Product added successfully!");
+        toast("Product added successfully!");
         setName("");
         setPrice("");
         setImage("");
@@ -133,11 +154,12 @@ function Seller() {
     setPayoutMsg("");
     setPayoutError("");
     try {
-      const res = await axios.post(
-        "http://localhost:3000/seller/payout-details",
-        { upiId, bankAccount, ifscCode, accountHolderName },
-        { withCredentials: true }
-      );
+      const res = await api.post("/seller/payout-details", {
+        upiId,
+        bankAccount,
+        ifscCode,
+        accountHolderName,
+      });
       if (res.data.success) {
         setPayoutMsg("Payout details saved successfully!");
         const updatedSeller = {
@@ -153,6 +175,44 @@ function Seller() {
       }
     } catch (err) {
       setPayoutError(err.response?.data?.message || "Something went wrong.");
+    }
+  };
+
+  const openDeleteConfirm = (product) => {
+    setConfirmDelete(product);
+  };
+
+  const closeDeleteConfirm = () => {
+    if (!deletingId) setConfirmDelete(null);
+  };
+
+  const handleDeleteProduct = async () => {
+    if (!confirmDelete) return;
+
+    const productId = confirmDelete._id;
+    const previousProducts = products;
+
+    // Optimistic UI: remove from list immediately
+    setProducts((prev) => prev.filter((p) => p._id !== productId));
+    setDeletingId(productId);
+
+    try {
+      const res = await api.delete(`/seller/product/${productId}`);
+      if (res.data.success) {
+        toast(res.data.message || "Product deleted successfully");
+        setConfirmDelete(null);
+      } else {
+        setProducts(previousProducts);
+        toast(res.data.message || "Failed to delete product", "error");
+      }
+    } catch (err) {
+      setProducts(previousProducts);
+      toast(
+        err.response?.data?.message || "Failed to delete product. Try again.",
+        "error"
+      );
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -177,6 +237,21 @@ function Seller() {
       </Card>
 
       <TabGroup tabs={TABS} activeTab={activeTab} onChange={setActiveTab} />
+
+      <ConfirmModal
+        open={Boolean(confirmDelete)}
+        title="Delete product?"
+        message={
+          confirmDelete
+            ? `"${confirmDelete.name}" will be permanently removed from the store. This cannot be undone.`
+            : ""
+        }
+        confirmLabel="Delete product"
+        cancelLabel="Keep product"
+        loading={Boolean(deletingId)}
+        onConfirm={handleDeleteProduct}
+        onCancel={closeDeleteConfirm}
+      />
 
       {activeTab === "add" && (
         <Card>
@@ -217,6 +292,86 @@ function Seller() {
               Add product
             </Button>
           </form>
+        </Card>
+      )}
+
+      {activeTab === "products" && (
+        <Card>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="text-lg font-semibold text-slate-900">
+                My products{" "}
+                <span className="font-normal text-slate-500">
+                  ({products.length})
+                </span>
+              </h2>
+              <p className="mt-1 text-sm text-slate-500">
+                Manage listings you have published. Only you can delete your own
+                products.
+              </p>
+            </div>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={fetchProducts}
+              disabled={loadingProducts}
+            >
+              Refresh
+            </Button>
+          </div>
+
+          {loadingProducts ? (
+            <Spinner label="Loading your products..." />
+          ) : products.length === 0 ? (
+            <p className="mt-6 text-center text-sm text-slate-500">
+              No products yet. Add your first product from the Add Product tab.
+            </p>
+          ) : (
+            <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {products.map((product) => (
+                <article
+                  key={product._id}
+                  className={`group overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-opacity ${
+                    deletingId === product._id ? "opacity-50" : ""
+                  }`}
+                >
+                  <div className="aspect-[4/3] overflow-hidden bg-slate-100">
+                    <img
+                      src={product.image}
+                      alt={product.name}
+                      className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+                      onError={(e) => {
+                        e.target.src =
+                          "https://placehold.co/400x300/e2e8f0/64748b?text=No+image";
+                      }}
+                    />
+                  </div>
+                  <div className="p-4">
+                    <h3 className="truncate font-semibold text-slate-900">
+                      {product.name}
+                    </h3>
+                    <p className="mt-1 text-lg font-semibold text-slate-900">
+                      ₹{product.price}
+                    </p>
+                    <p className="mt-2 line-clamp-2 text-sm text-slate-500">
+                      {product.info}
+                    </p>
+                    <Button
+                      type="button"
+                      variant="danger"
+                      size="sm"
+                      className="mt-4 w-full gap-2 border-red-200 bg-red-50 text-red-700 hover:bg-red-100 hover:text-red-800"
+                      disabled={deletingId === product._id}
+                      onClick={() => openDeleteConfirm(product)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                      {deletingId === product._id ? "Deleting..." : "Delete"}
+                    </Button>
+                  </div>
+                </article>
+              ))}
+            </div>
+          )}
         </Card>
       )}
 
