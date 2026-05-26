@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import "../App.css";
-import "../product.css";
-import Navbar from "../components/Navbar.jsx";
-import { Link, useNavigate } from 'react-router-dom';
+import ProductCard from "../components/ProductCard";
+import ShopLayout, { PageHeader, EmptyState } from "../components/ui/ShopLayout";
+import Spinner from "../components/ui/Spinner";
+import Button from "../components/ui/Button";
+import Alert from "../components/ui/Alert";
 
 function Home() {
   const [products, setProducts] = useState([]);
@@ -20,30 +21,9 @@ function Home() {
       setLoading(true);
       setError(null);
 
-      const endpoints = [
-        "http://localhost:3000/products",
-      ];
-
-      let response = null;
-      let lastError = null;
-
-      for (const endpoint of endpoints) {
-        try {
-          console.log("Trying endpoint:", endpoint);
-          response = await axios.get(endpoint, { timeout: 5000 });
-          console.log("Success with endpoint:", endpoint);
-          console.log("Response data:", response.data);
-          break;
-        } catch (err) {
-          lastError = err;
-          console.log("Failed with endpoint:", endpoint);
-          continue;
-        }
-      }
-
-      if (!response) {
-        throw lastError || new Error("No endpoints available");
-      }
+      const response = await axios.get("http://localhost:3000/products", {
+        timeout: 5000,
+      });
 
       const productsData = response.data.products || response.data || [];
 
@@ -52,19 +32,17 @@ function Home() {
       } else {
         throw new Error("Products data is not in expected format");
       }
-
     } catch (err) {
       console.error("Error fetching products:", err);
       setError(
         err.message ||
-        "Failed to load products. Please check your server is running on port 3000"
+          "Failed to load products. Please check your server is running on port 3000"
       );
       setProducts([]);
     } finally {
       setLoading(false);
     }
   };
-
 
   const setcartdata = async (productId) => {
     try {
@@ -74,121 +52,87 @@ function Home() {
         return;
       }
 
-      const res = await axios.post(
+      await axios.post(
         "http://localhost:3000/addtocart",
-        {
-          userId: user._id,
-          productId: productId
-        },
-        {
-          withCredentials: true
-        }
+        { userId: user._id, productId },
+        { withCredentials: true }
       );
 
-      console.log(res.data);
       alert("Product added to cart");
-
     } catch (err) {
       console.log(err);
     }
   };
 
-  const filteredProducts = products.filter((product) =>
-    product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    product.info.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredProducts = products.filter(
+    (product) =>
+      product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      product.info.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   if (loading) {
     return (
-      <div className="home-wrapper">
-        <Navbar />
-        <div className="loading-container">
-          <div className="spinner"></div>
-          <p>Loading products...</p>
-        </div>
-      </div>
+      <ShopLayout>
+        <Spinner label="Loading products..." />
+      </ShopLayout>
     );
   }
 
   if (error) {
     return (
-      <div className="home-wrapper">
-        <Navbar />
-        <div className="error-container">
-          <h2>Error Loading Products</h2>
-          <p>{error}</p>
-          <div className="error-tips">
-            <p><strong>Troubleshooting:</strong></p>
-            <ul>
-              <li>Make sure your backend server is running on port 3000</li>
-              <li>Check that seller routes are properly configured</li>
-              <li>Verify the endpoint matches your app.js setup</li>
-              <li>Check browser console (F12) for detailed errors</li>
-            </ul>
-          </div>
-          <button onClick={fetchProducts} className="retry-btn">
-            Retry
-          </button>
+      <ShopLayout>
+        <div className="mx-auto max-w-lg text-center">
+          <h2 className="text-xl font-semibold text-slate-900">
+            Unable to load products
+          </h2>
+          <Alert variant="error" className="mt-4 text-left">
+            {error}
+          </Alert>
+          <ul className="mt-6 space-y-2 text-left text-sm text-slate-500">
+            <li>Ensure the backend server is running on port 3000</li>
+            <li>Verify seller routes are configured in the API</li>
+            <li>Check the browser console for detailed errors</li>
+          </ul>
+          <Button className="mt-8" onClick={fetchProducts}>
+            Try again
+          </Button>
         </div>
-      </div>
+      </ShopLayout>
     );
   }
 
   return (
-    <div className="home-wrapper">
-      <Navbar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
+    <ShopLayout searchTerm={searchTerm} setSearchTerm={setSearchTerm}>
+      <PageHeader
+        title="Products"
+        subtitle={
+          filteredProducts.length > 0
+            ? `${filteredProducts.length} ${filteredProducts.length === 1 ? "item" : "items"} available`
+            : "Browse our catalog"
+        }
+      />
 
-      <div className="products-container">
-        <div className="section-header">
-          <h1>Our Products</h1>
-          <p className="section-subtitle">
-            {filteredProducts.length > 0
-              ? `Showing ${filteredProducts.length} ${filteredProducts.length === 1 ? 'product' : 'products'}`
-              : "No products available"}
-          </p>
+      {filteredProducts.length === 0 ? (
+        <EmptyState
+          title={searchTerm ? "No matches found" : "No products yet"}
+          description={
+            searchTerm
+              ? "Try adjusting your search terms."
+              : "Check back soon for new arrivals."
+          }
+        />
+      ) : (
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+          {filteredProducts.map((product) => (
+            <ProductCard
+              key={product._id}
+              product={product}
+              onAddToCart={setcartdata}
+            />
+          ))}
         </div>
-
-        {filteredProducts.length === 0 ? (
-          <div className="no-products-message">
-            <p>{searchTerm ? "No products found matching your search." : "No products available at the moment."}</p>
-          </div>
-        ) : (
-          <div className="products-wrapper">
-            {filteredProducts.map((product) => (
-              <div className="product-item" key={product._id}>
-                <div className="product-img-container">
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                    className="product-img"
-                    onError={(e) => {
-                      e.target.src =
-                        "https://via.placeholder.com/250x250?text=No+Image";
-                    }}
-                  />
-                </div>
-
-                <div className="product-info-container">
-                  <h3 className="product-title">{product.name}</h3>
-                  <p className="product-description">{product.info}</p>
-
-                  <div className="price-container">
-                    <span className="price">₹{product.price}</span>
-                  </div>
-
-                  <button
-                    className="cart-btn"
-                    onClick={() => setcartdata(product._id)}
-                  >
-                    Add to Cart
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
+      )}
+    </ShopLayout>
   );
 }
 

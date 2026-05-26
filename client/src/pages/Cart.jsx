@@ -1,224 +1,199 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import "../App.css";
-import "../product.css";
-import Navbar from "../components/Navbar.jsx";
 import { useNavigate } from "react-router-dom";
+import { Trash2, ArrowLeft } from "lucide-react";
+import ShopLayout, { PageHeader, EmptyState } from "../components/ui/ShopLayout";
+import Spinner from "../components/ui/Spinner";
+import Card from "../components/ui/Card";
+import Button from "../components/ui/Button";
 
 function Cart() {
+  const navigate = useNavigate();
+  const [cart, setCart] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [total, setTotal] = useState(0);
 
-    const navigate = useNavigate();
-    const [cart, setCart] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [total, setTotal] = useState(0);
+  useEffect(() => {
+    fetchCart();
+  }, []);
 
-    useEffect(() => {
-        fetchCart();
-    }, []);
-
-    const fetchCart = async () => {
-        try {
-            const userString = localStorage.getItem("user");
-            if (!userString) {
-                setLoading(false);
-                return;
-            }
-            const user = JSON.parse(userString);
-            const res = await axios.get(
-                `http://localhost:3000/cart-total/${user._id}`,
-                { withCredentials: true }
-            );
-            setCart(res.data.cart || []);
-            setTotal(res.data.totalAmount || 0);
-        } catch (err) {
-            console.log(err);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    const removeItem = async (cartItemId) => {
-        try {
-            const userString = localStorage.getItem("user");
-            if (!userString) return;
-            const user = JSON.parse(userString);
-            await axios.post(
-                "http://localhost:3000/removeitem",
-                { userId: user._id, cartItemId },
-                { withCredentials: true }
-            );
-            fetchCart();
-        } catch (err) {
-            console.log(err);
-        }
-    };
-
-    // Navigate to checkout page instead of handling payment here
-    const handleProceedToCheckout = () => {
-        if (cart.length === 0) {
-            alert("Your cart is empty!");
-            return;
-        }
-        navigate("/checkout");
-    };
-
-    if (loading) {
-        return (
-            <div className="home-wrapper">
-                <Navbar />
-                <div className="loading-container">
-                    <div className="spinner"></div>
-                    <p>Loading cart...</p>
-                </div>
-            </div>
-        );
+  const fetchCart = async () => {
+    try {
+      const userString = localStorage.getItem("user");
+      if (!userString) {
+        setLoading(false);
+        return;
+      }
+      const user = JSON.parse(userString);
+      const res = await axios.get(
+        `http://localhost:3000/cart-total/${user._id}`,
+        { withCredentials: true }
+      );
+      setCart(res.data.cart || []);
+      setTotal(res.data.totalAmount || 0);
+    } catch (err) {
+      console.log(err);
+    } finally {
+      setLoading(false);
     }
+  };
 
+  const removeItem = async (cartItemId) => {
+    try {
+      const userString = localStorage.getItem("user");
+      if (!userString) return;
+      const user = JSON.parse(userString);
+      await axios.post(
+        "http://localhost:3000/removeitem",
+        { userId: user._id, cartItemId },
+        { withCredentials: true }
+      );
+      fetchCart();
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  const handleProceedToCheckout = () => {
+    if (cart.length === 0) {
+      alert("Your cart is empty!");
+      return;
+    }
+    navigate("/checkout");
+  };
+
+  if (loading) {
     return (
-        <div className="home-wrapper">
-            <Navbar />
-            <div className="products-container">
-
-                <div className="section-header">
-                    <h1>Your Cart</h1>
-                    <p className="section-subtitle">
-                        {cart.length > 0 ? `${cart.length} item(s) in your cart` : "Your cart is empty"}
-                    </p>
-                </div>
-
-                {cart.length === 0 ? (
-                    <div className="no-products-message">
-                        <p>No items in cart yet. Start shopping!</p>
-                        <button className="home-button-go" onClick={() => navigate("/home")} style={{ marginTop: "15px" }}>
-                            Browse Products
-                        </button>
-                    </div>
-                ) : (
-                    <>
-                        <div className="products-wrapper">
-                            {cart.map((item) => (
-                                <div className="product-item" key={item._id}>
-                                    {item.productId ? (
-                                        <>
-                                            <div className="product-img-container">
-                                                <img
-                                                    src={item.productId.image}
-                                                    alt={item.productId.name}
-                                                    className="product-img"
-                                                    onError={(e) => {
-                                                        e.target.src = "https://via.placeholder.com/250x250?text=No+Image";
-                                                    }}
-                                                />
-                                            </div>
-
-                                            <div className="product-info-container">
-                                                <h3 className="product-title">{item.productId.name}</h3>
-
-                                                <div className="price-container">
-                                                    <span className="price">₹{item.productId.price}</span>
-                                                </div>
-
-                                                <div style={{ marginTop: "auto", display: "flex", flexDirection: "column", gap: "10px" }}>
-                                                    <div style={{
-                                                        display: "flex",
-                                                        justifyContent: "space-between",
-                                                        alignItems: "center",
-                                                        background: "#f5f5f5",
-                                                        padding: "8px 12px",
-                                                        borderRadius: "6px"
-                                                    }}>
-                                                        <span>Quantity:</span>
-                                                        <span style={{ fontWeight: "bold" }}>{item.quantity}</span>
-                                                    </div>
-
-                                                    <div style={{
-                                                        display: "flex",
-                                                        justifyContent: "space-between",
-                                                        alignItems: "center",
-                                                        background: "#f5f5f5",
-                                                        padding: "8px 12px",
-                                                        borderRadius: "6px"
-                                                    }}>
-                                                        <span>Subtotal:</span>
-                                                        <span style={{ fontWeight: "bold", color: "#000" }}>
-                                                            ₹{Number(item.productId.price) * item.quantity}
-                                                        </span>
-                                                    </div>
-
-                                                    <button
-                                                        className="cart-btn"
-                                                        style={{ background: "#d32f2f" }}
-                                                        onClick={() => removeItem(item._id)}
-                                                    >
-                                                        Remove
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </>
-                                    ) : (
-                                        <div className="product-info-container">
-                                            <h3 className="product-title" style={{ color: "#d32f2f" }}>
-                                                Product Unavailable
-                                            </h3>
-                                        </div>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-
-                        {/* Cart Summary */}
-                        <div style={{
-                            background: "#fff",
-                            border: "1px solid #eee",
-                            borderRadius: "12px",
-                            padding: "25px 30px",
-                            maxWidth: "420px",
-                            margin: "30px auto",
-                            boxShadow: "0 4px 10px rgba(0,0,0,0.08)"
-                        }}>
-                            <h2 style={{ marginBottom: "15px", fontSize: "1.2rem" }}>Order Summary</h2>
-                            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "10px" }}>
-                                <span style={{ color: "#555" }}>Items ({cart.length})</span>
-                                <span>₹{total}</span>
-                            </div>
-                            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: "20px" }}>
-                                <span style={{ color: "#555" }}>Shipping</span>
-                                <span style={{ color: "#00b300", fontWeight: "600" }}>FREE</span>
-                            </div>
-                            <div style={{
-                                display: "flex",
-                                justifyContent: "space-between",
-                                borderTop: "2px solid #000",
-                                paddingTop: "15px",
-                                marginBottom: "20px"
-                            }}>
-                                <strong style={{ fontSize: "1.1rem" }}>Total</strong>
-                                <strong style={{ fontSize: "1.1rem" }}>₹{total}</strong>
-                            </div>
-
-                            <button
-                                className="cart-btn"
-                                onClick={handleProceedToCheckout}
-                                style={{ background: "#000", width: "100%", fontSize: "1rem", padding: "14px" }}
-                            >
-                                Proceed to Checkout
-                            </button>
-                        </div>
-
-                        <div style={{ textAlign: "center" }}>
-                            <button
-                                className="home-button-go"
-                                onClick={() => navigate("/home")}
-                                type="button"
-                            >
-                                ← Continue Shopping
-                            </button>
-                        </div>
-                    </>
-                )}
-            </div>
-        </div>
+      <ShopLayout>
+        <Spinner label="Loading cart..." />
+      </ShopLayout>
     );
+  }
+
+  return (
+    <ShopLayout>
+      <PageHeader
+        title="Your cart"
+        subtitle={
+          cart.length > 0
+            ? `${cart.length} item${cart.length !== 1 ? "s" : ""} in your cart`
+            : "Your cart is empty"
+        }
+      />
+
+      {cart.length === 0 ? (
+        <EmptyState
+          title="Nothing here yet"
+          description="Add products from the store to get started."
+          action={
+            <Button onClick={() => navigate("/home")}>Browse products</Button>
+          }
+        />
+      ) : (
+        <div className="grid gap-8 lg:grid-cols-3">
+          <div className="space-y-4 lg:col-span-2">
+            {cart.map((item) =>
+              item.productId ? (
+                <Card
+                  key={item._id}
+                  className="flex flex-col gap-4 sm:flex-row sm:items-center"
+                  padding="p-4"
+                >
+                  <div className="h-24 w-24 shrink-0 overflow-hidden rounded-lg bg-slate-100">
+                    <img
+                      src={item.productId.image}
+                      alt={item.productId.name}
+                      className="h-full w-full object-cover"
+                      onError={(e) => {
+                        e.target.src =
+                          "https://via.placeholder.com/96/f1f5f9/64748b?text=--";
+                      }}
+                    />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="font-semibold text-slate-900">
+                      {item.productId.name}
+                    </h3>
+                    <p className="mt-1 text-sm text-slate-500">
+                      ₹{item.productId.price} each
+                    </p>
+                    <div className="mt-3 flex flex-wrap gap-4 text-sm">
+                      <span className="text-slate-600">
+                        Qty:{" "}
+                        <span className="font-medium text-slate-900">
+                          {item.quantity}
+                        </span>
+                      </span>
+                      <span className="text-slate-600">
+                        Subtotal:{" "}
+                        <span className="font-semibold text-slate-900">
+                          ₹{Number(item.productId.price) * item.quantity}
+                        </span>
+                      </span>
+                    </div>
+                  </div>
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    onClick={() => removeItem(item._id)}
+                    className="shrink-0 self-start sm:self-center"
+                  >
+                    <Trash2 className="h-4 w-4" aria-hidden />
+                    Remove
+                  </Button>
+                </Card>
+              ) : (
+                <Card key={item._id} padding="p-4">
+                  <p className="text-sm font-medium text-red-600">
+                    Product unavailable
+                  </p>
+                </Card>
+              )
+            )}
+          </div>
+
+          <div className="lg:col-span-1">
+            <Card className="sticky top-24">
+              <h2 className="text-lg font-semibold text-slate-900">
+                Order summary
+              </h2>
+              <dl className="mt-4 space-y-3 text-sm">
+                <div className="flex justify-between text-slate-600">
+                  <dt>Items ({cart.length})</dt>
+                  <dd className="font-medium text-slate-900">₹{total}</dd>
+                </div>
+                <div className="flex justify-between text-slate-600">
+                  <dt>Shipping</dt>
+                  <dd className="font-medium text-emerald-600">Free</dd>
+                </div>
+              </dl>
+              <div className="mt-4 flex justify-between border-t border-slate-200 pt-4">
+                <span className="font-semibold text-slate-900">Total</span>
+                <span className="text-lg font-semibold text-slate-900">
+                  ₹{total}
+                </span>
+              </div>
+              <Button
+                className="mt-6 w-full"
+                size="lg"
+                onClick={handleProceedToCheckout}
+              >
+                Proceed to checkout
+              </Button>
+              <Button
+                variant="ghost"
+                className="mt-3 w-full"
+                onClick={() => navigate("/home")}
+              >
+                <ArrowLeft className="h-4 w-4" aria-hidden />
+                Continue shopping
+              </Button>
+            </Card>
+          </div>
+        </div>
+      )}
+    </ShopLayout>
+  );
 }
 
 export default Cart;

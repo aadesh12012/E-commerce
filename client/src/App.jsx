@@ -1,6 +1,5 @@
 import React from 'react';
 import { Routes, Route } from "react-router-dom";
-import './App.css'
 import Register from './pages/Regester';
 import Login from './pages/Login';
 import Home from './pages/Home';
@@ -15,7 +14,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 
 function App() {
   return (
-    <div>
+    <div className="min-h-screen bg-slate-50">
       <Routes>
         <Route path="/register" element={<Register />} />
         <Route path="/" element={<Login />} />
@@ -26,7 +25,7 @@ function App() {
         <Route path="/sellerlogin" element={<Sellerlogin />} />
         <Route path="/sellerregister" element={<SellerRegister />} />
 
-        {/* Protected Routes */}
+       
         <Route path="/admin" element={
           <ProtectedRoute roleRequired="admin">
             <Admin />
