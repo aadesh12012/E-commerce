@@ -5,6 +5,11 @@ const productSchema = mongoose.Schema({
     price: String,
     image: String,
     info: String,
+    quantity: {
+        type: Number,
+        default: 0,
+        min: 0
+    },
     sellerId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "SellerLogin"

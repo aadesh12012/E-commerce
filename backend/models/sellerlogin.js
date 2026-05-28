@@ -4,6 +4,13 @@ const userSchema = mongoose.Schema({
     name: String,
     email: String,
     password: String,
+    phone: String,
+    businessName: String,
+    address: String,
+    businessLogo: {
+        type: String,
+        default: ""
+    },
     role: {
         type: String,
         default: "seller"

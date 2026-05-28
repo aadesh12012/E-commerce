@@ -18,7 +18,7 @@ const {
 
 const addproduct = async (req, res) => {
     try {
-        const { name, price, image, info } = req.body;
+        const { name, price, info, quantity } = req.body;
 
         // Check Product Exists
         const existingProduct = await ProductModel.findOne({ name });
@@ -29,12 +29,16 @@ const addproduct = async (req, res) => {
             });
         }
 
+        // Use uploaded file or provided URL
+        const productImage = req.file ? req.file.filename : req.body.image;
+
         // Create Product with sellerId
         const product = await ProductModel.create({
             name,
             price,
-            image,
+            image: productImage,
             info,
+            quantity: parseInt(quantity) || 0,
             sellerId: req.seller.id // From isSeller middleware
         });
 
@@ -54,7 +58,7 @@ const addproduct = async (req, res) => {
 
 const listproduct = async (req, res) => {
     try {
-        const products = await ProductModel.find().populate("sellerId", "name email");
+        const products = await ProductModel.find({ quantity: { $gt: 0 } }).populate("sellerId", "name email");
         res.status(200).json({
             success: true,
             products
@@ -153,6 +157,7 @@ const sellerregister = async (req, res) => {
             phone,
             businessName,
             address,
+            businessLogo: req.file ? req.file.filename : ""
         });
 
         await clearRegistrationOtp(normalizedEmail, PURPOSE.SELLER_REGISTER);

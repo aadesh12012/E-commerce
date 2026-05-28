@@ -2,6 +2,7 @@ const Razorpay = require("razorpay");
 const crypto = require("crypto");
 const Order = require("../models/order");
 const User = require("../models/User");
+const Product = require("../models/product");
 
 const razorpay = new Razorpay({
     key_id: process.env.KEY_ID || "rzp_test_xxxxxxxxx",
@@ -75,6 +76,20 @@ const verifyPayment = async (req, res) => {
                 paymentStatus: "successful"
             });
             savedOrders.push(newOrder);
+
+            // Decrease product quantity
+            const product = await Product.findById(productId);
+            if (product) {
+                product.quantity = Math.max(0, product.quantity - quantity);
+                
+                // Delete product if quantity reaches 0
+                if (product.quantity === 0) {
+                    await Product.findByIdAndDelete(productId);
+                    console.log(`Product ${productId} deleted due to zero quantity`);
+                } else {
+                    await product.save();
+                }
+            }
         }
 
         // Clear the user's cart
