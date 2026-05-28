@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Trash2 } from "lucide-react";
+import { Trash2, Upload } from "lucide-react";
 import api from "../api/axios";
 import DashboardLayout, {
   StatCard,
@@ -32,7 +32,9 @@ function Seller() {
 
   const [name, setName] = useState("");
   const [price, setPrice] = useState("");
-  const [image, setImage] = useState("");
+  const [quantity, setQuantity] = useState("");
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
   const [info, setInfo] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
@@ -126,18 +128,33 @@ function Seller() {
     e.preventDefault();
     setError("");
     setSuccess("");
-    if (!name || !price || !image || !info) {
+    if (!name || !price || !quantity || !imageFile || !info) {
       setError("All fields are required");
       return;
     }
     try {
-      const res = await api.post("/addproduct", { name, price, image, info });
+      const submitData = new FormData();
+      submitData.append("name", name);
+      submitData.append("price", price);
+      submitData.append("quantity", quantity);
+      submitData.append("info", info);
+      if (imageFile) {
+        submitData.append("productImage", imageFile);
+      }
+
+      const res = await api.post("/addproduct", submitData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
       if (res.data.success) {
         setSuccess("Product added successfully!");
         toast("Product added successfully!");
         setName("");
         setPrice("");
-        setImage("");
+        setQuantity("");
+        setImageFile(null);
+        setImagePreview(null);
         setInfo("");
       } else {
         setError(res.data.message || "Failed to add product");
@@ -146,6 +163,23 @@ function Seller() {
       setError(
         err.response?.data?.message || "Something went wrong. Please try again."
       );
+    }
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        setError("Image size must be less than 5MB");
+        return;
+      }
+      setImageFile(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+      setError("");
     }
   };
 
@@ -275,12 +309,69 @@ function Seller() {
               required
             />
             <Input
-              type="url"
-              placeholder="Image URL"
-              value={image}
-              onChange={(e) => setImage(e.target.value)}
+              type="number"
+              placeholder="Quantity available"
+              value={quantity}
+              onChange={(e) => setQuantity(e.target.value)}
               required
+              min="1"
             />
+
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-slate-700">
+                Product Image
+              </label>
+              <div className="relative">
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  onChange={handleImageChange}
+                  className="hidden"
+                  id="product-image-upload"
+                  required={!imageFile}
+                />
+                <label
+                  htmlFor="product-image-upload"
+                  className="flex cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 px-6 py-8 transition-colors hover:border-slate-400 hover:bg-slate-100"
+                >
+                  <div className="text-center">
+                    <Upload className="mx-auto h-8 w-8 text-slate-400" />
+                    <p className="mt-2 text-sm font-medium text-slate-900">
+                      {imageFile ? imageFile.name : "Click to upload image"}
+                    </p>
+                    <p className="text-xs text-slate-500">PNG, JPG, WebP up to 5MB</p>
+                  </div>
+                </label>
+              </div>
+              {imagePreview && (
+                <div className="flex items-center gap-4 rounded-lg border border-slate-200 bg-white p-4">
+                  <img
+                    src={imagePreview}
+                    alt="Preview"
+                    className="h-20 w-20 rounded-lg object-cover"
+                  />
+                  <div className="flex-1">
+                    <p className="text-sm font-medium text-slate-900">
+                      {imageFile?.name}
+                    </p>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="mt-1 text-red-600 hover:text-red-700"
+                      onClick={() => {
+                        setImageFile(null);
+                        setImagePreview(null);
+                        document.getElementById("product-image-upload").value = "";
+                      }}
+                    >
+                      Remove
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+
             <Textarea
               placeholder="Product description"
               rows={4}
@@ -337,7 +428,11 @@ function Seller() {
                 >
                   <div className="aspect-[4/3] overflow-hidden bg-slate-100">
                     <img
-                      src={product.image}
+                      src={
+                        product.image?.startsWith("http")
+                          ? product.image
+                          : `http://localhost:3000/uploads/${product.image}`
+                      }
                       alt={product.name}
                       className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
                       onError={(e) => {
@@ -347,9 +442,22 @@ function Seller() {
                     />
                   </div>
                   <div className="p-4">
-                    <h3 className="truncate font-semibold text-slate-900">
-                      {product.name}
-                    </h3>
+                    <div className="flex items-start justify-between gap-2">
+                      <h3 className="truncate font-semibold text-slate-900">
+                        {product.name}
+                      </h3>
+                      <span
+                        className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold whitespace-nowrap ${
+                          product.quantity > 10
+                            ? "bg-green-100 text-green-800"
+                            : product.quantity > 0
+                              ? "bg-yellow-100 text-yellow-800"
+                              : "bg-red-100 text-red-800"
+                        }`}
+                      >
+                        {product.quantity || 0} left
+                      </span>
+                    </div>
                     <p className="mt-1 text-lg font-semibold text-slate-900">
                       ₹{product.price}
                     </p>

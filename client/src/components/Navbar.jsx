@@ -14,7 +14,7 @@ function Navbar({ searchTerm = "", setSearchTerm = () => {} }) {
 
   return (
     <nav className="fixed inset-x-0 top-0 z-50 border-b border-slate-200 bg-white/95 backdrop-blur-sm">
-      <div className="mx-auto flex h-16 max-w-7xl items-center gap-4 px-4 sm:px-6 lg:px-8">
+      <div className="flex h-16 w-full items-center gap-3 px-4 sm:px-6 lg:px-8">
         <button
           type="button"
           onClick={() => navigate("/home")}
@@ -30,7 +30,7 @@ function Navbar({ searchTerm = "", setSearchTerm = () => {} }) {
           </span>
         </button>
 
-        <div className="relative mx-auto hidden max-w-md flex-1 sm:block">
+        <div className="relative hidden flex-1 sm:block">
           <Search
             className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400"
             aria-hidden

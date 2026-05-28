@@ -101,7 +101,11 @@ function Cart() {
                 >
                   <div className="h-24 w-24 shrink-0 overflow-hidden rounded-lg bg-slate-100">
                     <img
-                      src={item.productId.image}
+                      src={
+                        item.productId.image?.startsWith("http")
+                          ? item.productId.image
+                          : `http://localhost:3000/uploads/${item.productId.image}`
+                      }
                       alt={item.productId.name}
                       className="h-full w-full object-cover"
                       onError={(e) => {

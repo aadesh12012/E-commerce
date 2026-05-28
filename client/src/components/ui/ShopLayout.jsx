@@ -5,7 +5,7 @@ export default function ShopLayout({ children, searchTerm, setSearchTerm }) {
   return (
     <div className="min-h-screen bg-slate-50">
       <Navbar searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
-      <main className="mx-auto max-w-7xl px-4 pb-16 pt-32 sm:pt-24 sm:px-6 lg:px-8">
+      <main className="mx-auto w-full pb-16 pt-32 sm:pt-24 px-4 sm:px-6 lg:px-8">
         {children}
       </main>
     </div>

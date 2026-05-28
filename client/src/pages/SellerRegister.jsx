@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Upload } from "lucide-react";
 import api from "../api/axios";
 import AuthLayout, { AuthFooterLink, AuthLink } from "../components/ui/AuthLayout";
 import Card from "../components/ui/Card";
@@ -18,6 +19,8 @@ function SellerRegister() {
     businessName: "",
     address: "",
   });
+  const [businessLogo, setBusinessLogo] = useState(null);
+  const [logoPreview, setLogoPreview] = useState(null);
   const [otp, setOtp] = useState("");
   const [otpSent, setOtpSent] = useState(false);
   const [error, setError] = useState("");
@@ -31,6 +34,23 @@ function SellerRegister() {
     if (name === "email") {
       setOtpSent(false);
       setOtp("");
+    }
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        setError("Image size must be less than 5MB");
+        return;
+      }
+      setBusinessLogo(file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setLogoPreview(reader.result);
+      };
+      reader.readAsDataURL(file);
+      setError("");
     }
   };
 
@@ -104,14 +124,22 @@ function SellerRegister() {
 
     setLoading(true);
     try {
-      const res = await api.post("/seller/register", {
-        name: formData.name,
-        email: formData.email,
-        password: formData.password,
-        phone: formData.phone,
-        businessName: formData.businessName,
-        address: formData.address,
-        otp,
+      const submitData = new FormData();
+      submitData.append("name", formData.name);
+      submitData.append("email", formData.email);
+      submitData.append("password", formData.password);
+      submitData.append("phone", formData.phone);
+      submitData.append("businessName", formData.businessName);
+      submitData.append("address", formData.address);
+      submitData.append("otp", otp);
+      if (businessLogo) {
+        submitData.append("businessLogo", businessLogo);
+      }
+
+      const res = await api.post("/seller/register", submitData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
       });
 
       if (res.data.success) {
@@ -214,6 +242,62 @@ function SellerRegister() {
             onChange={handleChange}
             required
           />
+
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-slate-700">
+              Business Logo (Optional)
+            </label>
+            <div className="relative">
+              <input
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                onChange={handleImageChange}
+                className="hidden"
+                id="logo-upload"
+                disabled={loading}
+              />
+              <label
+                htmlFor="logo-upload"
+                className="flex cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-slate-300 bg-slate-50 px-6 py-8 transition-colors hover:border-slate-400 hover:bg-slate-100"
+              >
+                <div className="text-center">
+                  <Upload className="mx-auto h-8 w-8 text-slate-400" />
+                  <p className="mt-2 text-sm font-medium text-slate-900">
+                    {businessLogo ? businessLogo.name : "Click to upload logo"}
+                  </p>
+                  <p className="text-xs text-slate-500">PNG, JPG, WebP up to 5MB</p>
+                </div>
+              </label>
+            </div>
+            {logoPreview && (
+              <div className="flex items-center gap-4 rounded-lg border border-slate-200 bg-white p-4">
+                <img
+                  src={logoPreview}
+                  alt="Preview"
+                  className="h-16 w-16 rounded-lg object-cover"
+                />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-slate-900">
+                    {businessLogo?.name}
+                  </p>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="mt-1 text-red-600 hover:text-red-700"
+                    onClick={() => {
+                      setBusinessLogo(null);
+                      setLogoPreview(null);
+                      document.getElementById("logo-upload").value = "";
+                    }}
+                  >
+                    Remove
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+
           <Input
             name="password"
             type="password"
